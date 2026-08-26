@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Gentle Reminder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0a0a0f;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-color: #f0f0f0;
+            --accent-pink: #ff758c;
+            --accent-purple: #7579ff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+        
+        body, html { 
+            height: 100%; width: 100%; overflow: hidden; 
+            background: 
+                radial-gradient(circle at top, rgba(255, 120, 150, 0.15), transparent 40%),
+                radial-gradient(circle at bottom right, rgba(117, 121, 255, 0.18), transparent 40%),
+                linear-gradient(135deg, #0f0c29, #1f1b3a, #090912);
+            color: var(--text-color); 
+            font-family: 'Outfit', sans-serif; 
+        }
+
+        #particle-layer {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 0; pointer-events: none; overflow: hidden;
+        }
+
+        .particle { 
+            position: absolute; opacity: 0; pointer-events: none; animation: float linear infinite; 
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+        }
+
+        #cursor { width: 20px; height: 20px; border: 1px solid var(--accent-pink); border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999; transition: transform 0.1s ease; mix-blend-mode: difference; }
+        #cursor::after { content: ''; position: absolute; width: 4px; height: 4px; background: var(--accent-pink); border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+
+        #app { 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            height: 100vh; width: 100%; position: relative; z-index: 10; 
+        }
+        
+        .card { 
+            background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); 
+            padding: 3rem; border-radius: 30px; max-width: 600px; text-align: center; 
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3); opacity: 0; transform: translateY(20px);
+        }
+
+        .card.active { opacity: 1; transform: translateY(0); }
+        .card.final-glow { box-shadow: 0 0 50px rgba(255, 117, 140, 0.2); border-color: rgba(255, 117, 140, 0.3); }
+
+        h1 { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 400; margin-bottom: 1.5rem; line-height: 1.4; }
+        
+        #controls { position: absolute; bottom: 40px; right: 40px; z-index: 100; }
+        #continue-btn { display:none; margin-top:24px; padding:12px 24px; border:1px solid rgba(255,255,255,.22); border-radius:22px; background:rgba(255,255,255,.04); color:white; font-family:'Outfit',sans-serif; letter-spacing:.08em; text-transform:uppercase; font-size:11px; }
+        #continue-btn.show { display:inline-block; animation: fadeIn .8s ease forwards; }
+        @keyframes fadeIn { from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none} }
+        button { background: transparent; border: 1px solid var(--glass-border); color: white; padding: 10px 20px; border-radius: 20px; cursor: pointer; transition: 0.3s; }
+        button:hover { background: rgba(255,255,255,0.1); }
+
+        #loader { position: fixed; inset: 0; background: #0a0a0f; z-index: 1000; display: flex; align-items: center; justify-content: center; transition: opacity 1s ease; }
+        .spinner { border: 2px solid var(--glass-border); border-top: 2px solid var(--accent-pink); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="loader"><div class="spinner"></div></div>
+    <div id="particle-layer"></div>
+    <div id="cursor"></div>
+
+    <div id="app">
+        <div id="story-card" class="card">
+            <h1 id="message">Hey… Before you continue, take one deep breath.</h1>
+            <div id="footer-space"></div>
+            <button id="continue-btn" type="button">Step inside →</button>
+        </div>
+    </div>
+
+    <div id="controls">
+        <button id="music-btn">Music: Off</button>
+    </div>
+
+    <script>
+        // Place 'perfect.mp3' in the same folder as this HTML file
+        const audio = new Audio("perfect.mp3");
+
+        const musicBtn = document.getElementById('music-btn');
+        const continueBtn = document.getElementById('continue-btn');
+        let musicPlaying = false;
+        let isFinished = false;
+
+        continueBtn.addEventListener('click', () => {
+            window.location.href = '../index.html#memories';
+        });
+
+        musicBtn.addEventListener('click', () => {
+            if(!musicPlaying) { audio.play(); musicPlaying = true; musicBtn.innerText = "Music: On"; }
+            else { audio.pause(); musicPlaying = false; musicBtn.innerText = "Music: Off"; }
+        });
+
+        // Cleaned up steps (No repetitions)
+        const steps =[
+            "Hey… Before you continue, take one deep breath.",
+            "You’ve already survived days you thought would break you.",
+            "Some people study because love gave them a reason.",
+            "Your mother’s dream became beautiful the day you chose to fight for it.",
+            "There’s someone who quietly admires how strong you are becoming.",
+            "Your future self is already proud of you.",
+            "Someone smiles every time you say ‘I’ll keep trying.’",
+            "Even on your worst days… you still keep choosing to move forward.",
+            "And honestly? That’s something beautiful.",
+            "Your family is already proud of the person you are becoming.",
+            "And I know… one day you’ll make yourself proud too.",
+            "All the best for your exam ❤️",
+            "No matter how stressful this journey feels…",
+            "I’ll always silently pray that your dreams come true.",
+            "And maybe…",
+            "After all this stress ends…",
+            "I hope I can stay beside your story a little longer. ❤️"
+        ];
+
+        let currentStep = 0;
+        const msgEl = document.getElementById('message');
+        const cardEl = document.getElementById('story-card');
+        const footerSpace = document.getElementById('footer-space');
+        const particleLayer = document.getElementById('particle-layer');
+
+        setTimeout(() => { 
+            document.getElementById('loader').style.opacity = '0'; 
+            setTimeout(() => document.getElementById('loader').style.display = 'none', 1000); 
+            cardEl.classList.add('active'); 
+        }, 1500);
+
+        document.body.addEventListener('click', (e) => {
+            if (isFinished) return;
+
+            // Heart Burst Effect
+            for(let i = 0; i < 12; i++) {
+                const burst = document.createElement('div');
+                burst.innerHTML = '❤️';
+                burst.style.position = 'fixed';
+                burst.style.left = e.clientX + 'px';
+                burst.style.top = e.clientY + 'px';
+                burst.style.fontSize = '18px';
+                burst.style.pointerEvents = 'none';
+                burst.style.transition = 'all 1s ease';
+                burst.style.zIndex = '999';
+                document.body.appendChild(burst);
+
+                setTimeout(() => {
+                    burst.style.transform = `translate(${(Math.random()-0.5)*200}px, ${(Math.random()-0.5)*200}px) scale(0)`;
+                    burst.style.opacity = '0';
+                }, 10);
+                setTimeout(() => burst.remove(), 1000);
+            }
+
+            cardEl.classList.remove('active');
+            
+            setTimeout(() => {
+                currentStep++;
+                if (currentStep < steps.length) {
+                    msgEl.innerText = steps[currentStep];
+                    cardEl.classList.add('active');
+                } else {
+                    isFinished = true;
+                    cardEl.classList.add('final-glow');
+                    cardEl.classList.add('active');
+                    footerSpace.innerHTML = '<p style="margin-top:20px; opacity:0.7;">Made with love ❤️</p>';
+                    continueBtn.classList.add('show');
+                    continueBtn.focus({preventScroll:true});
+                }
+            }, 800);
+        });
+
+        function createParticle() {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.innerHTML = Math.random() > 0.5 ? '♥' : '✦';
+            
+            const size = Math.random() * 18 + 10;
+            p.style.fontSize = size + 'px';
+            p.style.left = Math.random() * 100 + 'vw';
+            p.style.animationDuration = (Math.random() * 5 + 5) + 's';
+            p.style.color = Math.random() > 0.5 ? '#ff758c' : '#7579ff';
+            
+            particleLayer.appendChild(p);
+            setTimeout(() => p.remove(), 10000);
+        }
+        
+        setInterval(createParticle, 250);
+
+        const cursor = document.getElementById('cursor');
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX - 10 + 'px';
+            cursor.style.top = e.clientY - 10 + 'px';
+        });
+    </script>
+</body>
+</html>
